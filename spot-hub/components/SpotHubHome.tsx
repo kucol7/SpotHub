@@ -4,6 +4,8 @@ import React from "react";
 import Image from "next/image";
 import { Search, Eye, Star, Play, Bell } from "lucide-react";
 
+import Navbar from "./Navbar";
+
 export default function SpotHubHome() {
   const popularMovies = [
     { id: 1, title: "Film 1", views: "67", rating: 5.0 },
@@ -14,39 +16,11 @@ export default function SpotHubHome() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white font-sans">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-white/5 bg-neutral-950/80 px-6 py-4 backdrop-blur-md md:px-12">
-                <div className="flex items-center gap-8">
-          <a href="/" className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="SPOT HUB"
-              width={150}
-              height={40}
-              className="h-10 w-auto object-contain"
-              priority
-            />
-          </a>
-                    <div className="hidden items-center gap-6 text-sm font-medium md:flex">
-            <a href="#" className="rounded bg-neutral-800 px-3 py-1.5 text-white transition hover:bg-neutral-700">Strona główna</a>
-            <a href="#" className="text-neutral-400 transition hover:text-white">Wojciech Ceprowski</a>
-            <a href="#" className="text-neutral-400 transition hover:text-white">Nienawidzę Gotować</a>
-            <a href="#" className="text-neutral-400 transition hover:text-white">Detektyw Stefanowicz</a>
-            <a href="#" className="text-neutral-400 transition hover:text-white">Wszystkie Filmy</a>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <Search className="h-5 w-5 cursor-pointer text-neutral-400 transition hover:text-white" />
-          <button className="hidden text-sm font-medium text-neutral-400 transition hover:text-white md:block">
-            Zaloguj się
-          </button>
-          <button className="rounded-full bg-purple-600 px-5 py-2 text-sm font-bold transition hover:bg-purple-700">
-            Zarejestruj
-          </button>
-        </div>
-      </nav>
+
+      <Navbar />
 
       {/* Hero Section */}
+
       <main className="mx-auto max-w-7xl px-6 py-4 md:px-12">
         <section className="grid items-center gap-8 md:grid-cols-2">
           <div className="aspect-video overflow-hidden rounded-xl bg-neutral-900 shadow-2xl">

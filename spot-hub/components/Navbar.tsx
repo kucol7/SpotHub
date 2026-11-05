@@ -1,17 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CircleUserRound, Search } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { navLinks } from "../lib/categories"; 
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUsername(null);
+    setLoading(false);
+    setMenuOpen(false);
+    router.refresh();
+    router.push("/");
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -93,15 +117,37 @@ export default function Navbar() {
       <div className="flex shrink-0 items-center gap-5">
         <Search className="h-5 w-5 cursor-pointer text-neutral-400 transition hover:text-white" />
         {loading ? null : username ? (
-          <div className="flex items-center gap-2">
+          <div className="relative" ref={menuRef}>
             <button
               type="button"
               aria-label="Konto"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-full text-sm font-medium text-neutral-300 transition hover:text-white"
             >
               <CircleUserRound className="h-6 w-6" />
               <span className="max-w-[140px] truncate">{username}</span>
             </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-md shadow-lg z-50 py-1">
+                <Link
+                  href="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="block px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+                >
+                  Mój profil
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+                >
+                  Wyloguj się
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <>

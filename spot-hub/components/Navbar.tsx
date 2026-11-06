@@ -12,6 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,7 @@ export default function Navbar() {
     const supabase = createClient();
     await supabase.auth.signOut();
     setUsername(null);
+    setAvatarUrl(null);
     setLoading(false);
     setMenuOpen(false);
     router.refresh();
@@ -48,31 +50,45 @@ export default function Navbar() {
 
         if (!user) {
           setUsername(null);
+          setAvatarUrl(null);
           setLoading(false);
           return;
         }
 
         const metaUsername = user.user_metadata?.username;
-        if (typeof metaUsername === "string" && metaUsername) {
-          setUsername(metaUsername);
-          setLoading(false);
-          return;
+        const fallbackUsername =
+          typeof metaUsername === "string" && metaUsername
+            ? metaUsername
+            : null;
+
+        let profileUsername: string | null = null;
+        let profileAvatarUrl: string | null = null;
+
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("username, avatar_url")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          profileUsername = profile?.username ?? null;
+          profileAvatarUrl = profile?.avatar_url ?? null;
+        } catch {
+          // Tabela "profiles" może jeszcze nie istnieć — ignorujemy.
         }
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", user.id)
-          .maybeSingle();
-
         if (mounted) {
-          setUsername(profile?.username ?? user.email ?? null);
+          setUsername(
+            fallbackUsername ?? profileUsername ?? user.email ?? null,
+          );
+          setAvatarUrl(profileAvatarUrl);
           setLoading(false);
         }
       })
       .catch(() => {
         if (mounted) {
           setUsername(null);
+          setAvatarUrl(null);
           setLoading(false);
         }
       });
@@ -126,7 +142,15 @@ export default function Navbar() {
               onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 rounded-full text-sm font-medium text-neutral-300 transition hover:text-white"
             >
-              <CircleUserRound className="h-6 w-6" />
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={`Zdjęcie profilowe użytkownika ${username}`}
+                  className="h-6 w-6 shrink-0 rounded-full border border-neutral-700 object-cover"
+                />
+              ) : (
+                <CircleUserRound className="h-6 w-6" />
+              )}
               <span className="max-w-[140px] truncate">{username}</span>
             </button>
 

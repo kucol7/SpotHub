@@ -8,12 +8,16 @@ export type Video = {
   duration: string;
 };
 
+export type Season = {
+  title: string;
+  videos: Video[];
+};
+
 export type Category = {
   slug: string;
   title: string;
   description: string;
-  sectionTitle: string;
-  videos: Video[];
+  seasons: Season[];
 };
 
 const wojciechseason1Videos: Video[] = [
@@ -156,32 +160,31 @@ export const categories: Record<string, Category> = {
     title: "Wojciech Ceprowski",
     description:
       "Wojciech Ceprowski: Nago przez Świat",
-    sectionTitle: "Sezon 1",
-    videos: [...wojciechseason1Videos, ...wojciechseason2Videos],
+    seasons: [
+      { title: "Sezon 1", videos: wojciechseason1Videos },
+      { title: "Sezon 2", videos: wojciechseason2Videos },
+    ],
   },
   "nienawidze-gotowac": {
     slug: "nienawidze-gotowac",
     title: "Nienawidzę Gotować",
     description:
       "Nienawidzę Gotować",
-    sectionTitle: "Sezon 1",
-    videos: nienawidzeGotowacVideos,
+    seasons: [{ title: "Sezon 1", videos: nienawidzeGotowacVideos }],
   },
   "detektyw-stefanowicz": {
     slug: "detektyw-stefanowicz",
     title: "Detektyw Stefanowicz",
     description:
       "Detektyw Stefanowicz",
-    sectionTitle: "Sezon 1",
-    videos: detektywVideos,
+    seasons: [{ title: "Sezon 1", videos: detektywVideos }],
   },
   inne: {
     slug: "inne",
     title: "Inne Filmy",
     description:
       "Inne",
-    sectionTitle: "ECPU Polska",
-    videos: inneVideos,
+    seasons: [{ title: "ECPU Polska", videos: inneVideos }],
   },
 };
 

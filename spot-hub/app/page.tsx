@@ -1,60 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
+// Zmieniono importy na relatywne, aby uniknąć problemów z aliasami
+import PasswordGate from "../components/PasswordGate";
+import SpotHubHome from "../components/SpotHubHome";
 
 export default function Home() {
-  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState("");
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const auth = localStorage.getItem("auth_status");
-    if (auth === "granted") {
+    const authStatus = localStorage.getItem("spothub_auth");
+    if (authStatus === "granted") {
       setIsAuthenticated(true);
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-  const CORRECT_PASSWORD = process.env.NEXT_PUBLIC_APP_PASSWORD;
-
-  if (password === CORRECT_PASSWORD) {
-    localStorage.setItem("auth_status", "granted");
-    setIsAuthenticated(true);
-    setError("");
-  } else {
-    setError("Błędne hasło!");
+  const handleLogin = (password: string) => {
+    if (password === "spot") {
+      localStorage.setItem("spothub_auth", "granted");
+      setIsAuthenticated(true);
+      setError("");
+    } else {
+      setError("Błędne hasło!");
     }
   };
 
-  if (!isMounted) return null;
-
-  if (isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold">witaj</h1>
-      </div>
-    );
+  if (!isMounted) {
+    return <div className="min-h-screen bg-neutral-950" />;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleLogin} className="flex flex-col gap-2 p-8 border">
-        <label>Podaj hasło:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border p-1 text-black"
-          required
-        />
-        <button type="submit" className="bg-zinc-800 text-white p-1">
-          Wejdź
-        </button>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-      </form>
-    </div>
+    <>
+      {isAuthenticated ? (
+        <SpotHubHome />
+      ) : (
+        <PasswordGate onLogin={handleLogin} error={error} />
+      )}
+    </>
   );
 }

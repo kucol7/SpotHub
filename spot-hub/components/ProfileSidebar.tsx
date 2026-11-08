@@ -46,7 +46,7 @@ const sections: SidebarSection[] = [
   {
     title: "Inne",
     items: [
-      { label: "Bezpieczeństwo", icon: Shield },
+      { label: "Bezpieczeństwo", href: "/profile/security", icon: Shield },
       { label: "Ustawienia", icon: Settings },
       { label: "Wyloguj", icon: LogOut, logout: true },
     ],

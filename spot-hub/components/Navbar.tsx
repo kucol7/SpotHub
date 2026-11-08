@@ -1,14 +1,62 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search } from "lucide-react";
+import { CircleUserRound, Search } from "lucide-react";
+import { createClient } from "../lib/supabase/client";
 import { navLinks } from "../lib/categories"; 
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const supabase = createClient();
+
+    supabase.auth
+      .getUser()
+      .then(async ({ data: { user } }) => {
+        if (!mounted) return;
+
+        if (!user) {
+          setUsername(null);
+          setLoading(false);
+          return;
+        }
+
+        const metaUsername = user.user_metadata?.username;
+        if (typeof metaUsername === "string" && metaUsername) {
+          setUsername(metaUsername);
+          setLoading(false);
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (mounted) {
+          setUsername(profile?.username ?? user.email ?? null);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setUsername(null);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-white/5 bg-neutral-950/80 px-6 py-4 backdrop-blur-md md:px-12">
@@ -44,12 +92,33 @@ export default function Navbar() {
       </div>
       <div className="flex shrink-0 items-center gap-5">
         <Search className="h-5 w-5 cursor-pointer text-neutral-400 transition hover:text-white" />
-        <button className="hidden whitespace-nowrap text-sm font-medium text-neutral-400 transition hover:text-white md:block">
-          Zaloguj się
-        </button>
-        <button className="whitespace-nowrap rounded-full bg-purple-600 px-5 py-2 text-sm font-bold transition hover:bg-purple-700">
-          Zarejestruj
-        </button>
+        {loading ? null : username ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Konto"
+              className="flex items-center gap-2 rounded-full text-sm font-medium text-neutral-300 transition hover:text-white"
+            >
+              <CircleUserRound className="h-6 w-6" />
+              <span className="max-w-[140px] truncate">{username}</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            <Link
+              href="/login"
+              className="hidden whitespace-nowrap text-sm font-medium text-neutral-400 transition hover:text-white md:block"
+            >
+              Zaloguj się
+            </Link>
+            <Link
+              href="/register"
+              className="whitespace-nowrap rounded-full bg-purple-600 px-5 py-2 text-sm font-bold transition hover:bg-purple-700"
+            >
+              Zarejestruj
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );

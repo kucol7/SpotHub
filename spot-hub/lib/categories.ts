@@ -139,6 +139,16 @@ const detektywVideos: Video[] = [
     views: "67",
     duration: "21:37",
   },
+  {
+    id: "stefanowicz-3",
+    title: "S01E03",
+    description:
+      "%DESCRIPTION%",
+    thumbnail: "bg-neutral-800",
+    rating: "4.5",
+    views: "52",
+    duration: "19:03",
+  },
 ];
 
 const inneVideos: Video[] = [

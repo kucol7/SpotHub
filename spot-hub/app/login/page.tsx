@@ -1,6 +1,4 @@
 import { LoginForm } from "./login-form";
-
-// Strona czyta `searchParams`, więc nie może być w pełni prerenderowana.
 export const instant = false;
 
 type LoginSearchParams = {

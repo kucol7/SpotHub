@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Eye, Film, Play } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import StarRating from "../../../components/StarRating";
+import WatchlistButton from "../../../components/WatchlistButton";
 import { createClient } from "../../../lib/supabase/server";
 import { getSeriesBySlug } from "../../../lib/series";
 
@@ -159,6 +160,7 @@ export default async function CategoryPage({
                           <span className="flex items-center gap-1">
                             <Eye className="h-3 w-3" /> {views}
                           </span>
+                          <WatchlistButton videoId={video.id} variant="card" />
                         </div>
                       </div>
 

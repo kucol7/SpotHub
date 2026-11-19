@@ -39,7 +39,7 @@ const sections: SidebarSection[] = [
     title: "Filmy",
     items: [
       { label: "Katalog", icon: Clapperboard },
-      { label: "Do obejrzenia", icon: Clock },
+      { label: "Do obejrzenia", href: "/profile/watchlist", icon: Clock },
       { label: "Moje recenzje", icon: Star },
     ],
   },

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Eye, Star, Play } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import Navbar from "./Navbar";
+import WatchlistButton from "./WatchlistButton";
 
 type ReviewRatingRow = {
   rating: number | null;
@@ -202,6 +203,7 @@ export default function SpotHubHome() {
                   <div className="flex items-center gap-4 mt-1 text-xs text-neutral-400">
                     <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {video.views_count ?? 0}</span>
                     <span className="flex items-center gap-1"><Star className="h-3 w-3 text-yellow-500" /> {averageRating(video.reviews).toFixed(1)}</span>
+                    <WatchlistButton videoId={video.id} variant="card" />
                   </div>
                 </div>
               </Link>

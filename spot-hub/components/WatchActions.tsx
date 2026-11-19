@@ -4,17 +4,20 @@ import { useState } from "react";
 import { Check, Loader2, MessageSquare, Plus, Share2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useReviews } from "./reviews-context";
+import WatchlistButton from "./WatchlistButton";
 
 type WatchActionsProps = {
   videoId: string;
   userId: string | null;
   initialWatched: boolean;
+  initialInWatchlist: boolean;
 };
 
 export default function WatchActions({
   videoId,
   userId,
   initialWatched,
+  initialInWatchlist,
 }: WatchActionsProps) {
   const [watched, setWatched] = useState(initialWatched);
   const [busy, setBusy] = useState(false);
@@ -97,6 +100,13 @@ export default function WatchActions({
             <Plus className="h-5 w-5" />
           )}
         </button>
+
+        <WatchlistButton
+          videoId={videoId}
+          userId={userId}
+          initialInWatchlist={initialInWatchlist}
+          variant="round"
+        />
 
         <button
           type="button"

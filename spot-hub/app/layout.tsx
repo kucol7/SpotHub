@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { UserLibraryProvider } from "../components/user-library-context";
 
 export const metadata: Metadata = {
   title: "Spot Hub",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <UserLibraryProvider>{children}</UserLibraryProvider>
+      </body>
     </html>
   );
 }

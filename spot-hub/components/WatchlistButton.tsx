@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { BookmarkCheck, BookmarkPlus, Loader2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
+import { useUserLibrary } from "./user-library-context";
 
 type WatchlistButtonProps = {
   videoId: string;
   userId?: string | null;
   initialInWatchlist?: boolean;
+  initialWatched?: boolean;
   variant?: "card" | "round";
   className?: string;
   onToggle?: (nextInWatchlist: boolean) => void;
@@ -18,84 +20,46 @@ export default function WatchlistButton({
   videoId,
   userId: userIdProp,
   initialInWatchlist = false,
+  initialWatched = false,
   variant = "card",
   className = "",
   onToggle,
 }: WatchlistButtonProps) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(userIdProp ?? null);
-  const [inWatchlist, setInWatchlist] = useState(initialInWatchlist);
-  const [loading, setLoading] = useState(userIdProp === undefined);
+  const {
+    ready,
+    userId: contextUserId,
+    isWatched,
+    isInWatchlist,
+    setInWatchlist,
+  } = useUserLibrary();
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Gdy rodzic przekazał stan zalogowania (np. strona filmu lub lista
-    // „Do obejrzenia”), nie sprawdzamy sesji ponownie.
-    if (userIdProp !== undefined) {
-      return;
-    }
+  const userId = userIdProp !== undefined ? userIdProp : contextUserId;
 
-    let mounted = true;
-    const supabase = createClient();
-
-    supabase.auth
-      .getUser()
-      .then(async ({ data: { user } }) => {
-        if (!mounted) return;
-
-        if (!user) {
-          setUserId(null);
-          setInWatchlist(false);
-          setLoading(false);
-          return;
-        }
-
-        setUserId(user.id);
-
-        try {
-          const { data } = await supabase
-            .from("watchlist")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("video_id", videoId)
-            .maybeSingle();
-
-          if (mounted) {
-            setInWatchlist(Boolean(data));
-            setLoading(false);
-          }
-        } catch {
-          // Tabela "watchlist" może jeszcze nie istnieć.
-          if (mounted) {
-            setInWatchlist(false);
-            setLoading(false);
-          }
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setUserId(null);
-          setInWatchlist(false);
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [userIdProp, videoId]);
+  // Gdy film jest już w historii obejrzanych, przycisk „Do obejrzenia”
+  // nie renderuje się wcale.
+  const watched =
+    userId != null && (ready ? isWatched(videoId) : initialWatched);
 
   function showToast(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(null), 2500);
   }
 
+  if (watched) {
+    return null;
+  }
+
+  const inWatchlist =
+    userId != null && ready ? isInWatchlist(videoId) : initialInWatchlist;
+
   async function handleToggle(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
 
-    if (loading) {
+    if (!ready) {
       return;
     }
 
@@ -125,7 +89,7 @@ export default function WatchlistButton({
           throw error;
         }
 
-        setInWatchlist(false);
+        setInWatchlist(videoId, false);
         onToggle?.(false);
         showToast("Usunięto z listy do obejrzenia");
       } else {
@@ -137,7 +101,7 @@ export default function WatchlistButton({
           throw error;
         }
 
-        setInWatchlist(true);
+        setInWatchlist(videoId, true);
         onToggle?.(true);
         showToast("Dodano do listy do obejrzenia");
       }
@@ -158,7 +122,7 @@ export default function WatchlistButton({
         <button
           type="button"
           onClick={handleToggle}
-          disabled={busy || loading}
+          disabled={busy || !ready}
           aria-label={ariaLabel}
           title={ariaLabel}
           className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
@@ -190,7 +154,7 @@ export default function WatchlistButton({
       <button
         type="button"
         onClick={handleToggle}
-        disabled={busy || loading}
+        disabled={busy || !ready}
         aria-label={ariaLabel}
         title={ariaLabel}
         className={`flex items-center justify-center transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${

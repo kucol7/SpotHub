@@ -5,6 +5,7 @@ import { Check, Loader2, MessageSquare, Plus, Share2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useReviews } from "./reviews-context";
 import WatchlistButton from "./WatchlistButton";
+import { useUserLibrary } from "./user-library-context";
 
 type WatchActionsProps = {
   videoId: string;
@@ -23,6 +24,10 @@ export default function WatchActions({
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const { openReview } = useReviews();
+  const {
+    setWatched: setLibraryWatched,
+    setInWatchlist: setLibraryInWatchlist,
+  } = useUserLibrary();
 
   function showToast(message: string) {
     setToast(message);
@@ -48,11 +53,16 @@ export default function WatchActions({
           .eq("user_id", userId)
           .eq("video_id", videoId);
         setWatched(false);
+        setLibraryWatched(videoId, false);
       } else {
         await supabase
           .from("watched_history")
           .insert({ user_id: userId, video_id: videoId });
         setWatched(true);
+        // Trigger w Supabase usuwa wpis z watchlist — synchronizujemy UI,
+        // aby przycisk „Do obejrzenia” zniknął natychmiast.
+        setLibraryWatched(videoId, true);
+        setLibraryInWatchlist(videoId, false);
       }
     } catch {
       showToast("Nie udało się zapisać. Spróbuj ponownie.");
@@ -105,6 +115,7 @@ export default function WatchActions({
           videoId={videoId}
           userId={userId}
           initialInWatchlist={initialInWatchlist}
+          initialWatched={initialWatched}
           variant="round"
         />
 

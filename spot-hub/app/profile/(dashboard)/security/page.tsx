@@ -14,7 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { createClient } from "../../../lib/supabase/client";
+import { createClient } from "../../../../lib/supabase/client";
 import { deleteUserAccount } from "./actions";
 
 function getPasswordErrorMessage(error: unknown): string {
@@ -127,9 +127,6 @@ export default function SecurityPage() {
     try {
       const supabase = createClient();
 
-      // Dodatkowe zabezpieczenie UI: weryfikujemy stare hasło przez ponowne
-      // logowanie. Standardowa zmiana hasła przez updateUser wymaga jedynie
-      // przekazania nowego hasła.
       const { error: verifyError } = await supabase.auth.signInWithPassword({
         email,
         password: currentPassword,
@@ -221,8 +218,6 @@ export default function SecurityPage() {
 
     try {
       const supabase = createClient();
-
-      // 1. Weryfikacja tożsamości — ponowne logowanie podanym hasłem.
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: deletePassword,
@@ -234,7 +229,6 @@ export default function SecurityPage() {
         return;
       }
 
-      // 2. Usunięcie konta (i profilu) przez Server Action z service_role.
       const result = await deleteUserAccount();
 
       if (!result.ok) {
@@ -245,7 +239,6 @@ export default function SecurityPage() {
         return;
       }
 
-      // 3. Wylogowanie i powrót na stronę główną.
       await supabase.auth.signOut();
       router.refresh();
       router.replace("/");

@@ -1,30 +1,30 @@
 import { redirect } from "next/navigation";
-import { createClient } from "../../../lib/supabase/server";
-import WatchlistContent, {
-  type WatchlistItem,
-} from "../../../components/WatchlistContent";
+import { createClient } from "../../../../lib/supabase/server";
+import CatalogContent, {
+  type CatalogItem,
+} from "../../../../components/CatalogContent";
 
-// Strona czyta ciasteczka sesji (auth), więc nie może być prerenderowana.
+
 export const instant = false;
 
 type ReviewRatingRow = {
   rating: number | null;
 };
 
-type WatchlistVideoRow = {
+type CatalogVideoRow = {
   id: string;
   season: number | null;
   episode: number | null;
   title: string | null;
-  description: string | null;
+  series_name: string | null;
   thumbnail_url: string | null;
   views_count: number | null;
   reviews: ReviewRatingRow[] | null;
 };
 
-type WatchlistRow = {
+type CatalogRow = {
   created_at: string;
-  videos: WatchlistVideoRow | WatchlistVideoRow[] | null;
+  videos: CatalogVideoRow | CatalogVideoRow[] | null;
 };
 
 function averageRating(reviews: ReviewRatingRow[] | null | undefined): number {
@@ -39,7 +39,7 @@ function averageRating(reviews: ReviewRatingRow[] | null | undefined): number {
   return total / reviews.length;
 }
 
-export default async function WatchlistPage() {
+export default async function CatalogPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,19 +49,19 @@ export default async function WatchlistPage() {
     redirect("/login");
   }
 
-  let items: WatchlistItem[] = [];
+  let items: CatalogItem[] = [];
 
   try {
     const { data, error } = await supabase
-      .from("watchlist")
+      .from("watched_history")
       .select(
-        "created_at, videos(id, season, episode, title, description, thumbnail_url, views_count, reviews(rating))",
+        "created_at, videos(id, season, episode, title, series_name, thumbnail_url, views_count, reviews(rating))",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (!error && Array.isArray(data)) {
-      items = (data as WatchlistRow[])
+      items = (data as CatalogRow[])
         .filter((row) => row.videos != null)
         .map((row) => {
           const video = Array.isArray(row.videos)
@@ -73,22 +73,21 @@ export default async function WatchlistPage() {
           }
 
           return {
-            watchlistCreatedAt: row.created_at,
+            watchedAt: row.created_at,
             id: video.id,
             season: video.season,
             episode: video.episode,
             title: video.title,
-            description: video.description,
-            thumbnail_url: video.thumbnail_url,
-            views_count: video.views_count,
+            seriesName: video.series_name,
+            thumbnailUrl: video.thumbnail_url,
+            viewsCount: video.views_count,
             rating: averageRating(video.reviews),
-          } satisfies WatchlistItem;
+          } satisfies CatalogItem;
         })
-        .filter((item): item is WatchlistItem => item !== null);
+        .filter((item): item is CatalogItem => item !== null);
     }
   } catch {
-    // Tabela "watchlist" może jeszcze nie istnieć — wyświetlamy pusty stan.
   }
 
-  return <WatchlistContent items={items} userId={user.id} />;
+  return <CatalogContent items={items} userId={user.id} />;
 }

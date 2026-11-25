@@ -157,7 +157,7 @@ export default function Navbar() {
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-neutral-800 rounded-md shadow-lg z-50 py-1">
                 <Link
-                  href="/profile"
+                  href="/profile/me"
                   onClick={() => setMenuOpen(false)}
                   className="block px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
                 >

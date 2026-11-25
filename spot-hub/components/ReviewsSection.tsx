@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownUp, Check, CircleUserRound, MessageSquare, Pencil, Star } from "lucide-react";
 import type { WatchReview } from "../lib/watch";
 import { useReviews } from "./reviews-context";
+import ReviewLikeButton from "./ReviewLikeButton";
 
 type SortMode = "newest" | "oldest" | "rating";
 
@@ -134,24 +136,50 @@ export default function ReviewsSection({
             const isOwn =
               currentUserId !== null && review.userId === currentUserId;
 
+            const authorUsername = review.username.trim();
+            const authorHref =
+              currentUserId !== null && review.userId === currentUserId
+                ? "/profile/me"
+                : authorUsername
+                  ? `/profile/${encodeURIComponent(authorUsername)}`
+                  : null;
+
+            const authorContent = (
+              <>
+                {review.avatarUrl ? (
+                  <img
+                    src={review.avatarUrl}
+                    alt={`Awatar użytkownika ${review.nickname}`}
+                    className="h-8 w-8 shrink-0 rounded-full border border-neutral-800 object-cover transition-opacity group-hover:opacity-80"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-800">
+                    <CircleUserRound className="h-4 w-4 text-neutral-500" />
+                  </div>
+                )}
+                <span className="truncate text-sm font-medium text-white transition-colors group-hover:text-purple-400">
+                  {review.nickname}
+                </span>
+              </>
+            );
+
             return (
-              <article key={review.id}>
+              <article key={review.id} className="w-full min-w-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    {review.avatarUrl ? (
-                      <img
-                        src={review.avatarUrl}
-                        alt={`Awatar użytkownika ${review.nickname}`}
-                        className="h-8 w-8 shrink-0 rounded-full border border-neutral-800 object-cover"
-                      />
+                    {authorHref ? (
+                      <Link
+                        href={authorHref}
+                        title={`Zobacz profil: ${review.nickname}`}
+                        className="group flex min-w-0 items-center gap-2.5"
+                      >
+                        {authorContent}
+                      </Link>
                     ) : (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-800">
-                        <CircleUserRound className="h-4 w-4 text-neutral-500" />
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        {authorContent}
                       </div>
                     )}
-                    <span className="truncate text-sm font-medium text-white">
-                      {review.nickname}
-                    </span>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
@@ -176,14 +204,24 @@ export default function ReviewsSection({
                 </div>
 
                 {review.content.trim().length > 0 && (
-                  <p className="mt-2 text-sm text-neutral-300">
+                  <p className="mt-2 w-full min-w-0 break-words whitespace-pre-line text-sm text-neutral-300 [overflow-wrap:anywhere]">
                     {review.content}
                   </p>
                 )}
 
-                <p className="mt-1 text-xs text-neutral-500">
-                  {formatReviewDate(review.createdAt)}
-                </p>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">
+                    {formatReviewDate(review.createdAt)}
+                  </span>
+
+                  <ReviewLikeButton
+                    reviewId={review.id}
+                    initialCount={review.likeCount}
+                    initialIsLiked={review.isLiked}
+                    isAuthenticated={currentUserId !== null}
+                    userId={currentUserId}
+                  />
+                </div>
               </article>
             );
           })

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { AlertCircle, CheckCircle2, Loader2, Pen, User, X } from "lucide-react";
-import { createClient } from "../../../lib/supabase/client";
+import { createClient } from "../../../../lib/supabase/client";
 
 const BIO_MAX_LENGTH = 500;
 
@@ -134,7 +134,6 @@ export default function EditProfilePage() {
             initialBioValue = profile.bio;
           }
         } catch {
-          // Tabela "profiles" może jeszcze nie istnieć.
         }
 
         setUsername(initialUsernameValue);
@@ -364,7 +363,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      {/* Zdjęcie profilowe */}
+      {}
       <section className="flex flex-col items-center">
         {displayedAvatar ? (
           <img
@@ -397,7 +396,7 @@ export default function EditProfilePage() {
         />
       </section>
 
-      {/* Formularz */}
+      {}
       <form onSubmit={handleSubmit} className="mt-10 space-y-6">
 
         <div className="space-y-2">

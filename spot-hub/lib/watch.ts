@@ -14,10 +14,13 @@ export type WatchReview = {
   id: string;
   userId: string | null;
   nickname: string;
+  username: string;
   avatarUrl: string | null;
   rating: number; // 0..5
   content: string;
   createdAt: string; // ISO
+  likeCount: number;
+  isLiked: boolean;
 };
 
 const MOCK_EPISODE_TITLES: Record<string, string> = {
@@ -185,7 +188,11 @@ export function coerceVideoRow(row: unknown, fallbackId: string): WatchVideo | n
   };
 }
 
-export function coerceReviewRow(row: unknown, fallbackId: string): WatchReview | null {
+export function coerceReviewRow(
+  row: unknown,
+  fallbackId: string,
+  currentUserId: string | null = null,
+): WatchReview | null {
   if (!row || typeof row !== "object") {
     return null;
   }
@@ -221,5 +228,29 @@ export function coerceReviewRow(row: unknown, fallbackId: string): WatchReview |
     avatarUrl = readString(record, ["avatar_url", "avatarUrl"]);
   }
 
-  return { id, userId, nickname, avatarUrl, rating, content, createdAt };
+  const reviewLikesRaw = record["review_likes"];
+  const reviewLikes = Array.isArray(reviewLikesRaw) ? reviewLikesRaw : [];
+  const likeCount = reviewLikes.length;
+  const isLiked = Boolean(
+    currentUserId &&
+      reviewLikes.some(
+        (like) =>
+          like !== null &&
+          typeof like === "object" &&
+          (like as Record<string, unknown>).user_id === currentUserId,
+      ),
+  );
+
+  return {
+    id,
+    userId,
+    nickname,
+    username: nickname,
+    avatarUrl,
+    rating,
+    content,
+    createdAt,
+    likeCount,
+    isLiked,
+  };
 }

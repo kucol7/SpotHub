@@ -31,7 +31,7 @@ const sections: SidebarSection[] = [
   {
     title: "Ja",
     items: [
-      { label: "Mój profil", href: "/profile", icon: User },
+      { label: "Mój profil", href: "/profile/me", icon: User },
       { label: "Edytuj dane", href: "/profile/edit", icon: Pencil },
     ],
   },
@@ -61,8 +61,8 @@ export default function ProfileSidebar() {
   const router = useRouter();
 
   function isActive(href: string): boolean {
-    if (href === "/profile") {
-      return pathname === "/profile";
+    if (href === "/profile/me") {
+      return pathname === "/profile/me";
     }
     return pathname.startsWith(href);
   }

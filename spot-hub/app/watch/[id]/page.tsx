@@ -16,7 +16,6 @@ import {
 } from "../../../lib/watch";
 import { ReviewsProvider } from "../../../components/reviews-context";
 
-// Strona czyta ciasteczka sesji (auth), więc nie może być prerenderowana.
 export const instant = false;
 
 type WatchPageProps = {
@@ -142,7 +141,6 @@ function renderCard(video: CardVideo, includeSeries: boolean) {
       <Link href={`/watch/${video.id}`} className="group block">
         <div className="mt-3 aspect-video overflow-hidden rounded-lg bg-neutral-900">
           {video.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={video.thumbnailUrl}
               alt={title}
@@ -178,7 +176,6 @@ export default async function WatchPage({ params }: WatchPageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  // 1. Wideo — z tabeli `videos`, z fallbackiem do danych mockowanych.
   let video: WatchVideo | null = null;
   let videoSeason: number | null = null;
   let nextEpisodeId: string | null = null;
@@ -199,7 +196,6 @@ export default async function WatchPage({ params }: WatchPageProps) {
           : null;
     }
   } catch {
-    // Tabela `videos` może jeszcze nie istnieć — przechodzimy do mocków.
   }
   if (!video) {
     video = getMockVideo(id);
@@ -208,7 +204,6 @@ export default async function WatchPage({ params }: WatchPageProps) {
     notFound();
   }
 
-  // 2. Bieżący użytkownik (potrzebny dla listy „Do obejrzenia” i stanów).
   let userId: string | null = null;
   try {
     const {
@@ -218,10 +213,8 @@ export default async function WatchPage({ params }: WatchPageProps) {
       userId = user.id;
     }
   } catch {
-    // Brak sesji lub błąd pobierania użytkownika.
   }
 
-  // 3. Następny odcinek — dynamicznie z tabeli `videos` (next_episode_id).
   let nextVideo: CardVideo | null = null;
   if (nextEpisodeId) {
     try {
@@ -236,14 +229,12 @@ export default async function WatchPage({ params }: WatchPageProps) {
         nextVideo = coerceCardVideo(data, nextEpisodeId);
       }
     } catch {
-      // Tabela `videos` może jeszcze nie istnieć.
     }
   }
 
-  // 4. Polecany film — gdy to samodzielny film albo brak kolejnego odcinka.
+
   let recommendedVideo: CardVideo | null = null;
   if (videoSeason === null || nextVideo === null) {
-    // Priorytet 1: lista „Do obejrzenia” zalogowanego użytkownika.
     if (userId) {
       try {
         const { data, error } = await supabase
@@ -279,11 +270,9 @@ export default async function WatchPage({ params }: WatchPageProps) {
           recommendedVideo = winner ? coerceCardVideo(winner, winner.id) : null;
         }
       } catch {
-        // Tabela `watchlist` może jeszcze nie istnieć.
       }
     }
 
-    // Priorytet 2: fallback ogólny z całej tabeli `videos`.
     if (!recommendedVideo) {
       try {
         const { data, error } = await supabase
@@ -300,36 +289,37 @@ export default async function WatchPage({ params }: WatchPageProps) {
           recommendedVideo = coerceCardVideo(data, id);
         }
       } catch {
-        // Tabela `videos` może jeszcze nie istnieć.
       }
     }
   }
 
-  // 5. Recenzje — z tabeli `reviews` (z profilem autora).
+
   let reviews: WatchReview[] = [];
   try {
     const { data, error } = await supabase
       .from("reviews")
-      .select("id, user_id, rating, content, created_at, profiles(username, avatar_url)")
+      .select(
+        "id, user_id, rating, content, created_at, profiles!user_id(username, avatar_url), review_likes(user_id)",
+      )
       .eq("video_id", id)
       .order("created_at", { ascending: false });
     if (!error && Array.isArray(data)) {
       reviews = data
-        .map((row, index) => coerceReviewRow(row, `${id}-review-${index + 1}`))
+        .map((row, index) =>
+          coerceReviewRow(row, `${id}-review-${index + 1}`, userId),
+        )
         .filter((review): review is WatchReview => review !== null);
     }
   } catch {
-    // Tabela `reviews` może jeszcze nie istnieć — wyświetlamy pusty stan.
   }
 
-  // Średnia arytmetyczna ocen na podstawie recenzji.
+
   const averageRating =
     reviews.length === 0
       ? 0
       : reviews.reduce((sum, review) => sum + review.rating, 0) /
         reviews.length;
 
-  // 6. Stan "obejrzane" z tabeli `watched_history` oraz „do obejrzenia”.
   let initialWatched = false;
   let initialInWatchlist = false;
   try {
@@ -351,15 +341,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
       initialInWatchlist = Boolean(watchlistRow);
     }
   } catch {
-    // Brak sesji lub tabela `watched_history`/`watchlist` nie istnieje.
   }
 
-  // Recenzja bieżącego użytkownika dla tego filmu (jeśli istnieje).
+
   const userReview = userId
     ? reviews.find((review) => review.userId === userId) ?? null
     : null;
 
-  // Wybór stanu prawej kolumny (4 przypadki).
   let sectionKind: "next-same" | "next-season" | "coming-soon" | "recommended";
   if (videoSeason === null) {
     sectionKind = "recommended";
@@ -384,18 +372,18 @@ export default async function WatchPage({ params }: WatchPageProps) {
       >
         <main className="mx-auto max-w-7xl px-6 py-8 md:px-12">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Lewa kolumna — odtwarzacz i opis */}
+          {}
           <div className="lg:col-span-2">
             <h1 className="text-xl text-neutral-300">{video.seriesTitle}</h1>
 
-            {/* Odtwarzacz (placeholder) */}
+            {}
             <div className="mt-3 aspect-video overflow-hidden rounded-lg bg-neutral-900">
               <div className="flex h-full w-full items-center justify-center border border-neutral-800">
                 <Play className="h-16 w-16 text-purple-500 opacity-50" />
               </div>
             </div>
 
-            {/* Tytuł i metadane */}
+            {}
             <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
               <h2 className="text-2xl font-bold">
                 {video.episodeLabel} - {video.episodeTitle}
@@ -413,7 +401,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
               </div>
             </div>
 
-            {/* Przyciski akcji */}
+            {}
             <div className="mt-5">
               <WatchActions
                 videoId={video.id}
@@ -423,13 +411,13 @@ export default async function WatchPage({ params }: WatchPageProps) {
               />
             </div>
 
-            {/* Opis */}
+            {}
             <p className="mt-6 whitespace-pre-line leading-relaxed text-neutral-400">
               {video.description}
             </p>
           </div>
 
-          {/* Prawa kolumna — następny odcinek / polecany film i recenzje */}
+          {}
           <aside className="lg:sticky lg:top-20 lg:self-start">
             <section>
               {sectionKind === "next-same" && nextVideo ? (

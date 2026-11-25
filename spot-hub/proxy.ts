@@ -40,8 +40,18 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Chroni /profile oraz wszystkie podścieżki przed niezalogowanymi.
-  if (pathname.startsWith("/profile") && !user) {
+  // Chroni prywatne podstrony profilu przed niezalogowanymi.
+  // Publiczny profil użytkownika (/profile/[username]) pozostaje dostępny.
+  const PROTECTED_PROFILE_PATHS = [
+    "/profile",
+    "/profile/me",
+    "/profile/edit",
+    "/profile/catalog",
+    "/profile/watchlist",
+    "/profile/security",
+  ];
+
+  if (PROTECTED_PROFILE_PATHS.includes(pathname) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(pathname)}`;
